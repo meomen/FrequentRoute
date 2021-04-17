@@ -16,8 +16,8 @@ public interface GridTripRepostory extends JpaRepository<GridTrip, UUID> {
     List<GridTrip> findAllByAccount_id(String account_id);
 
     @Query(value = "select * from grid_trip where trip_id = ?1", nativeQuery = true)
-    List<GridTrip> findAllByTrip_id(UUID trip_id);
+    List<GridTrip> findAllByTrip_id(String trip_id);
 
     @Query(value = "select * from grid_trip where account_id = ?1 and trip_id = ?2", nativeQuery = true)
-    List<GridTrip> findAllByAccount_idAndTrip_id(String account_id, UUID trip_id);
+    List<GridTrip> findAllByAccount_idAndTrip_id(String account_id, String trip_id);
 }

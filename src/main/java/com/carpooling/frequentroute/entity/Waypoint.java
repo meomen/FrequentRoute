@@ -3,12 +3,13 @@ package com.carpooling.frequentroute.entity;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
 @Data
 @Table(name = "waypoint")
-public class Waypoint {
+public class Waypoint implements Serializable {
 
     @Id
     @GeneratedValue

@@ -36,7 +36,7 @@ public class DataController {
     @GetMapping("/account/{account_id}")
     @ResponseBody
     public Account getAccountById(@PathVariable ("account_id") String accountId ) {
-        return accountRepository.getOne(accountId);
+        return accountRepository.findById(accountId).get();
     }
 
     @PostMapping("/account")
@@ -55,13 +55,13 @@ public class DataController {
     @GetMapping("/trip/{trip_id}")
     @ResponseBody
     public Trip getTripById (@PathVariable ("trip_id") UUID tripId) {
-        return tripRepostory.getOne(tripId);
+        return tripRepostory.findById(tripId).get();
     }
 
     @GetMapping("/trip/account_owner")
     @ResponseBody
-    public List<Trip> getTripByAccountId (@RequestParam String account_id) {
-        return tripRepostory.findAllByAccount_owner(account_id);
+    public List<Trip> getTripByAccountId (@RequestParam String account_owner) {
+        return tripRepostory.findAllByAccount_owner(account_owner);
     }
 
     @PostMapping("/trip")
@@ -80,7 +80,7 @@ public class DataController {
     @GetMapping("/gridtrip/{grid_trip_id}")
     @ResponseBody
     public GridTrip getGridTripById (@PathVariable ("grid_trip_id") UUID gridtripId) {
-        return gridTripRepostory.getOne(gridtripId);
+        return gridTripRepostory.findById(gridtripId).get();
     }
 
     @GetMapping("/gridtrip/account_id")
@@ -90,12 +90,12 @@ public class DataController {
 
     @GetMapping("/gridtrip/trip_id")
     public List<GridTrip> getGridTripByTripId (@RequestParam UUID trip_id) {
-        return gridTripRepostory.findAllByTrip_id(trip_id);
+        return gridTripRepostory.findAllByTrip_id(trip_id.toString());
     }
 
     @GetMapping("/gridtrip/account_trip_id")
     public List<GridTrip> getGridTripByAccountIdAndTripId (@RequestParam String account_id, @RequestParam UUID trip_id) {
-        return gridTripRepostory.findAllByAccount_idAndTrip_id(account_id,trip_id);
+        return gridTripRepostory.findAllByAccount_idAndTrip_id(account_id,trip_id.toString());
     }
 
     @PostMapping("/gridtrip")
@@ -114,13 +114,13 @@ public class DataController {
     @GetMapping("/waypoint/{id}")
     @ResponseBody
     public Waypoint getWaypointById(@PathVariable("id") UUID id) {
-        return waypointRepostory.getOne(id);
+        return waypointRepostory.findById(id).get();
     }
 
     @GetMapping("/waypoint/on_trip")
     @ResponseBody
     public List<Waypoint> getWaypointByTripId(@RequestParam("on_trip") UUID on_trip) {
-        return waypointRepostory.findAllByOn_trip(on_trip);
+        return waypointRepostory.findAllByOn_trip(on_trip.toString());
     }
 
     @PostMapping("/waypoint")
@@ -139,7 +139,7 @@ public class DataController {
     @GetMapping("/frequentroute/{id}")
     @ResponseBody
     public FrequentRoute getFrequentRouteById (@PathVariable("id") UUID id) {
-        return frequentRouteRepostory.getOne(id);
+        return frequentRouteRepostory.findById(id).get();
     }
 
     @GetMapping("/frequentroute/account_id")

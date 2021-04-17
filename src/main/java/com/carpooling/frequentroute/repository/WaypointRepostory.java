@@ -11,5 +11,5 @@ import java.util.UUID;
 @Repository
 public interface WaypointRepostory extends JpaRepository<Waypoint, UUID> {
     @Query(value = "select * from waypoint where on_trip = ?1", nativeQuery = true)
-    List<Waypoint> findAllByOn_trip(UUID on_trip);
+    List<Waypoint> findAllByOn_trip(String on_trip);
 }
