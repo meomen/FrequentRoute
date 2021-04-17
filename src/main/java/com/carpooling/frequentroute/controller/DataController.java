@@ -1,13 +1,12 @@
 package com.carpooling.frequentroute.controller;
 
-import com.carpooling.frequentroute.entity.Account;
-import com.carpooling.frequentroute.entity.GridTrip;
-import com.carpooling.frequentroute.repository.AccountRepository;
-import com.carpooling.frequentroute.repository.GridTripRepostory;
+import com.carpooling.frequentroute.entity.*;
+import com.carpooling.frequentroute.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class DataController {
@@ -16,26 +15,145 @@ public class DataController {
     private AccountRepository accountRepository;
 
     @Autowired
+    private TripRepostory tripRepostory;
+
+    @Autowired
     private GridTripRepostory gridTripRepostory;
+
+    @Autowired
+    private WaypointRepostory waypointRepostory;
+
+    @Autowired
+    private FrequentRouteRepostory frequentRouteRepostory;
 
 
     @GetMapping("/account")
     @ResponseBody
-    public List<Account> getAccount () {
+    public List<Account> getAllAccount() {
         return accountRepository.findAll();
     }
 
-    @PostMapping("/gridtrip")
+    @GetMapping("/account/{account_id}")
     @ResponseBody
-    public GridTrip addGridTrip (@RequestBody GridTrip gridTrip) {
-        gridTripRepostory.save(gridTrip);
-        return gridTrip;
+    public Account getAccountById(@PathVariable ("account_id") String accountId ) {
+        return accountRepository.getOne(accountId);
+    }
+
+    @PostMapping("/account")
+    @ResponseBody
+    public Account addAccount(@RequestBody Account account) {
+        accountRepository.save(account);
+        return account;
+    }
+
+    @GetMapping("/trip")
+    @ResponseBody
+    public List<Account> getAllTrip () {
+        return accountRepository.findAll();
+    }
+
+    @GetMapping("/trip/{trip_id}")
+    @ResponseBody
+    public Trip getTripById (@PathVariable ("trip_id") UUID tripId) {
+        return tripRepostory.getOne(tripId);
+    }
+
+    @GetMapping("/trip/account_owner")
+    @ResponseBody
+    public List<Trip> getTripByAccountId (@RequestParam String account_id) {
+        return tripRepostory.findAllByAccount_owner(account_id);
+    }
+
+    @PostMapping("/trip")
+    @ResponseBody
+    public Trip addTrip (@RequestBody Trip tripBody) {
+        tripRepostory.save(tripBody);
+        return tripBody;
     }
 
     @GetMapping("/gridtrip")
     @ResponseBody
-    private List<GridTrip> getGridTrip () {
+    public List<GridTrip> getAllGridTrip() {
         return gridTripRepostory.findAll();
     }
+
+    @GetMapping("/gridtrip/{grid_trip_id}")
+    @ResponseBody
+    public GridTrip getGridTripById (@PathVariable ("grid_trip_id") UUID gridtripId) {
+        return gridTripRepostory.getOne(gridtripId);
+    }
+
+    @GetMapping("/gridtrip/account_id")
+    public List<GridTrip> getGridTripByAccountId (@RequestParam String account_id) {
+        return gridTripRepostory.findAllByAccount_id(account_id);
+    }
+
+    @GetMapping("/gridtrip/trip_id")
+    public List<GridTrip> getGridTripByTripId (@RequestParam UUID trip_id) {
+        return gridTripRepostory.findAllByTrip_id(trip_id);
+    }
+
+    @GetMapping("/gridtrip/account_trip_id")
+    public List<GridTrip> getGridTripByAccountIdAndTripId (@RequestParam String account_id, @RequestParam UUID trip_id) {
+        return gridTripRepostory.findAllByAccount_idAndTrip_id(account_id,trip_id);
+    }
+
+    @PostMapping("/gridtrip")
+    @ResponseBody
+    public GridTrip addGridTrip(@RequestBody GridTrip gridTrip) {
+        gridTripRepostory.save(gridTrip);
+        return gridTrip;
+    }
+
+    @GetMapping("/waypoint")
+    @ResponseBody
+    public List<Waypoint> getAllWaypoint() {
+        return waypointRepostory.findAll();
+    }
+
+    @GetMapping("/waypoint/{id}")
+    @ResponseBody
+    public Waypoint getWaypointById(@PathVariable("id") UUID id) {
+        return waypointRepostory.getOne(id);
+    }
+
+    @GetMapping("/waypoint/on_trip")
+    @ResponseBody
+    public List<Waypoint> getWaypointByTripId(@RequestParam("on_trip") UUID on_trip) {
+        return waypointRepostory.findAllByOn_trip(on_trip);
+    }
+
+    @PostMapping("/waypoint")
+    @ResponseBody
+    public Waypoint addWaypoint(@RequestBody Waypoint waypoint) {
+        waypointRepostory.save(waypoint);
+        return waypoint;
+    }
+
+    @GetMapping("/frequentroute")
+    @ResponseBody
+    public List<FrequentRoute> getAllFrequentRoute() {
+        return frequentRouteRepostory.findAll();
+    }
+
+    @GetMapping("/frequentroute/{id}")
+    @ResponseBody
+    public FrequentRoute getFrequentRouteById (@PathVariable("id") UUID id) {
+        return frequentRouteRepostory.getOne(id);
+    }
+
+    @GetMapping("/frequentroute/account_id")
+    @ResponseBody
+    public List<FrequentRoute> getFrequentRouteByAccountId(@RequestParam String account_id){
+        return frequentRouteRepostory.findAllByAccount_id(account_id);
+    }
+
+    @PostMapping("/frequentroute")
+    @ResponseBody
+    public FrequentRoute addFrequentRoute (@RequestBody FrequentRoute frequentRoute) {
+        frequentRouteRepostory.save(frequentRoute);
+        return frequentRoute;
+    }
+
 
 }
