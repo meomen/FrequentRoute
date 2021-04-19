@@ -48,8 +48,8 @@ public class DataController {
 
     @GetMapping("/trip")
     @ResponseBody
-    public List<Account> getAllTrip () {
-        return accountRepository.findAll();
+    public List<Trip> getAllTrip () {
+        return tripRepostory.findAll();
     }
 
     @GetMapping("/trip/{trip_id}")

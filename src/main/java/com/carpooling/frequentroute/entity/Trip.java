@@ -5,6 +5,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -17,5 +18,10 @@ public class Trip implements Serializable {
     private UUID trip_id;
 
     private String account_owner;
+
+    @Temporal(TemporalType.DATE)
+    private Date date;
+
+    private int weekday;
 
 }
