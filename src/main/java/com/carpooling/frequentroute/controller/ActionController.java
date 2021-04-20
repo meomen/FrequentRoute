@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -70,12 +72,13 @@ public class ActionController {
         }
 
         long endingTime = System.currentTimeMillis();
-        String resultTime = "Running time: " + (endingTime - startingTime)/1000.0;
+        String resultTime = "Running time: " + (endingTime - startingTime)/1000.0+"s";
         return resultTime;
 
     }
 
     @GetMapping("/findFrequentRoute")
+    @ResponseBody
     public String findFrequentRoute(@RequestParam("account_id") String account_id,
                                   @RequestParam("min_support") int min_support,
                                   @RequestParam("min_length") int min_length) {
@@ -99,6 +102,22 @@ public class ActionController {
         }
         List<ItemSet> itemSets = MapUtility.findFrequentRoute(gridmap, min_support, min_length);
 
+        for (ItemSet itemSet : itemSets) {
+            itemSet.getItems().sort(new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    String a = o1.substring(1,o1.length()-1);
+                    String b = o2.substring(1,o2.length()-1);
+                    String[] arrString = a.split(":");
+                    a = arrString[2];
+                    arrString = b.split(":");
+                    b = arrString[2];
+                    return a.compareTo(b);
+                }
+            });
+            System.out.println("itemset:"+ itemSet);
+        }
+
         //Save
         for (ItemSet itemSet : itemSets) {
 
@@ -113,7 +132,7 @@ public class ActionController {
         }
 
         long endingTime = System.currentTimeMillis();
-        String resultTime = "Running time: " + (endingTime - startingTime)/1000.0;
+        String resultTime = "Running time: " + (endingTime - startingTime)/1000.0 +"s";
         return resultTime;
     }
 }
