@@ -13,4 +13,7 @@ public interface FrequentRouteRepostory extends JpaRepository<FrequentRoute, UUI
 
     @Query(value = "select * from frequent_route where account_id = ?1", nativeQuery = true)
     List<FrequentRoute> findAllByAccount_id(String account_id);
+
+    @Query(value = "delete from frequent_route where account_id = ?1", nativeQuery = true)
+    void deleteAllByAccount_id(String account_id);
 }

@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -22,6 +23,9 @@ public class GridTrip implements Serializable {
     @Column(name = "trip_id")
     private UUID trip_id;
 
-    @Column(name = "data")
-    private String data;
+    @Temporal(TemporalType.DATE)
+    private Date date;
+
+    private int weekday;
+
 }

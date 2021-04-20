@@ -1,9 +1,19 @@
 package com.carpooling.frequentroute.gripmap;
 
+import com.carpooling.frequentroute.entity.FrequentPoint;
+import com.carpooling.frequentroute.entity.GridPoint;
+import com.carpooling.frequentroute.entity.Waypoint;
 import com.carpooling.frequentroute.model.LatLng;
+import com.github.chen0040.fpm.AssocRuleMiner;
+import com.github.chen0040.fpm.data.ItemSet;
+import com.github.chen0040.fpm.data.ItemSets;
+import com.github.chen0040.fpm.data.MetaData;
+import com.github.chen0040.fpm.fpg.FPGrowth;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class MapUtility {
     public static double START_LATITUDE = 20.95;
@@ -63,13 +73,98 @@ public class MapUtility {
                 double longTemp = latLng.longitude - START_LONGITUDE;
                 int indexLat = (int) (latTemp / LENGTH_REGION) + 1;
                 int indexLong = (int) (longTemp / LENGTH_REGION) + 1;
-                if(indexLat != preIndexLat || indexLong != preIndexLong){
+                if (indexLat != preIndexLat || indexLong != preIndexLong) {
                     if (builder.length() != 0) builder.append(", ");
                     builder.append("(").append(indexLat).append(":").append(indexLong).append(")");
-                    preIndexLat = indexLat; preIndexLong = indexLong;
+                    preIndexLat = indexLat;
+                    preIndexLong = indexLong;
                 }
             }
         }
         return builder.toString();
+    }
+
+    public static List<GridPoint> tranformTriptoGrid(List<Waypoint> waypoints, UUID grid_trip_id) {
+        ArrayList arrayGridPoint = new ArrayList();
+        int preIndexLat = -1;
+        int preIndexLong = -1;
+        int preTime = -1;
+        for (Waypoint waypoint : waypoints) {
+            double lat = waypoint.getLatitude();
+            double lng = waypoint.getLongitude();
+            Date time = waypoint.getTime();
+            int hh = time.getHours();
+            int mm = time.getMinutes();
+
+            if (lat >= START_LATITUDE && lat <= END_LATITUDE
+                    && lng >= START_LONGITUDE && lng <= END_LONGITUDE) {
+
+                double latTemp = lat - START_LATITUDE;
+                double longTemp = lng - START_LONGITUDE;
+                int indexLat = (int) (latTemp / LENGTH_REGION) + 1;
+                int indexLong = (int) (longTemp / LENGTH_REGION) + 1;
+                int timeInt = convertTimetoInt(hh, mm);
+
+                if (indexLat != preIndexLat || indexLong != preIndexLong || timeInt != preTime) {
+
+                    GridPoint gridPoint = new GridPoint();
+                    gridPoint.setGrid_trip_id(grid_trip_id);
+                    gridPoint.setLat(indexLat);
+                    gridPoint.setLng(indexLong);
+                    gridPoint.setTime(timeInt);
+                    arrayGridPoint.add(gridPoint);
+
+                    preIndexLat = indexLat;
+                    preIndexLong = indexLong;
+                    preTime = timeInt;
+                }
+            }
+        }
+        return arrayGridPoint;
+    }
+
+    public static int convertTimetoInt(int hh, int mm) {
+        int sumTime = 0;
+        sumTime += hh * 12;
+        sumTime += mm/5;
+        return sumTime;
+    }
+
+    public static List<ItemSet> findFrequentRoute(List<List<GridPoint>> gridmap, int min_support, int min_length) {
+        List<ItemSet> itemSets;
+        List<List<String>> dataset = new ArrayList<>();
+        for (List<GridPoint> gridPointList : gridmap) {
+            List<String> strings = new ArrayList<>();
+            for (GridPoint gridPoint : gridPointList) {
+                strings.add(gridPoint.toString());
+            }
+            dataset.add(strings);
+        }
+
+        AssocRuleMiner method = new FPGrowth();
+        method.setMinSupportLevel(min_support);
+        MetaData metaData = new MetaData(dataset);
+        ItemSets frequent_item_sets = method.findMaxPatterns(dataset, metaData.getUniqueItems());
+        itemSets = frequent_item_sets.getSets();
+        for (int i = 0; i < itemSets.size(); i++) {
+            ItemSet itemSet = itemSets.get(i);
+            if(itemSet.getItems().size() < min_length) itemSet.getItems().remove(i);
+        }
+        return itemSets;
+    }
+
+    public static FrequentPoint createFrequentPoint (String stringFP, UUID frequent_route_id){
+        FrequentPoint frequentPoint = new FrequentPoint();
+        frequentPoint.setFrequent_route_id(frequent_route_id);
+
+        if(!stringFP.isEmpty()) {
+            stringFP = stringFP.substring(1,stringFP.length()-1);
+            String[] arrString = stringFP.split(":");
+            frequentPoint.setLat(Integer.parseInt(arrString[0]));
+            frequentPoint.setLng(Integer.parseInt(arrString[1]));
+            frequentPoint.setTime(Integer.parseInt(arrString[2]));
+        }
+
+        return frequentPoint;
     }
 }

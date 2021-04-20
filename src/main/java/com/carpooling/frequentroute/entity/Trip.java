@@ -24,4 +24,5 @@ public class Trip implements Serializable {
 
     private int weekday;
 
+
 }

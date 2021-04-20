@@ -6,18 +6,22 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
 @Data
-@Table (name = "frequent_route")
-public class FrequentRoute implements Serializable {
+@Table (name = "frequent_point")
+public class FrequentPoint {
 
     @Id
     @GeneratedValue
     private UUID id;
 
-    private String account_id;
+    private UUID frequent_route_id;
 
+    private int lat;
+
+    private int lng;
+
+    private int time;
 }
