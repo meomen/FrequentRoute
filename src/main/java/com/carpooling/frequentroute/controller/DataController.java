@@ -29,6 +29,9 @@ public class DataController {
     @Autowired
     private FrequentRouteRepostory frequentRouteRepostory;
 
+    @Autowired
+    private RouteRepository routeRepository;
+
 
     @GetMapping("/account")
     @ResponseBody
@@ -177,5 +180,35 @@ public class DataController {
         return frequentRoute;
     }
 
+    @GetMapping("/route")
+    @ResponseBody
+    public List<Route> getAllRoute() {
+        return routeRepository.findAll();
+    }
+
+    @GetMapping("/route/{id}")
+    @ResponseBody
+    public Route getRouteById(@PathVariable("id") int id) {
+        return routeRepository.findById(id).get();
+    }
+
+    @GetMapping("/route/account_id")
+    @ResponseBody
+    public List<Route> getRouteByAccountId(@RequestParam String account_id) {
+        return routeRepository.findAllByAccount_id(account_id);
+    }
+
+    @GetMapping("/route/frequent_route_id")
+    @ResponseBody
+    public List<Route> getRouteByFrequentRoute(@RequestParam UUID frequent_route_id) {
+        return routeRepository.findAllByFrequent_route_id(frequent_route_id);
+    }
+
+    @PostMapping("/route")
+    @ResponseBody
+    public Route addRoute(@RequestBody Route route) {
+        routeRepository.save(route);
+        return route;
+    }
 
 }
