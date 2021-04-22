@@ -11,7 +11,7 @@ import java.util.UUID;
 public class Route {
 
     @Id
-    @GeneratedValue (strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
 
     String account_id;
@@ -30,7 +30,8 @@ public class Route {
     String time_start;
     String time_end;
 
-    boolean is_shared;
+    int is_shared;
+    double length_route;
     int weekday;
 
 }
