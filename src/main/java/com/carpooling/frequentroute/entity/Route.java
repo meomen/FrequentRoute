@@ -31,6 +31,8 @@ public class Route {
     String time_end;
 
     int is_shared;
+    String type_shared;
+
     double length_route;
     int weekday;
 

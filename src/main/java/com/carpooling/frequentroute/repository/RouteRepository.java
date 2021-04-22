@@ -18,6 +18,6 @@ public interface RouteRepository extends JpaRepository<Route,Integer> {
     @Query(value = "select * from route where frequent_route_id = ?1", nativeQuery = true)
     List<Route> findAllByFrequent_route_id(UUID account_id);
 
-    @Query(value = "update route set is_shared = ?1 where id = ?2", nativeQuery = true)
-    void updateIsShared(int is_shared, int id);
+    @Query(value = "update route set is_shared = ?1, type_shared = ?2 where id = ?3 ", nativeQuery = true)
+    void updateIsSharedAndTypeShare(int is_shared, String type, int id);
 }

@@ -212,8 +212,8 @@ public class DataController {
     }
 
     @PutMapping("/route/is_shared")
-    public void updateIsShared(@RequestParam int is_shared, @RequestParam int id) {
-        routeRepository.updateIsShared(is_shared,id);
+    public void updateIsShared(@RequestParam int is_shared, @RequestParam String type_shared, @RequestParam int id) {
+        routeRepository.updateIsSharedAndTypeShare(is_shared, type_shared, id);
     }
 
 }
