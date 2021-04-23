@@ -16,4 +16,15 @@ public interface FrequentRouteRepostory extends JpaRepository<FrequentRoute, UUI
 
     @Query(value = "delete from frequent_route where account_id = ?1", nativeQuery = true)
     void deleteAllByAccount_id(String account_id);
+
+    @Query(value = "select * from frequent_route fr " +
+            "inner join route r on fr.id = r.frequent_route_id" +
+            "where fr.account_id != ?1 and r.is_shared = 1", nativeQuery = true)
+    List<FrequentRoute> getFrequentRouteParticipant (String account_id);
+
+    @Query(value = "select * from frequent_route fr " +
+            "inner join route r on fr.id = r.frequent_route_id" +
+            "where fr.account_id != ?1 and r.is_shared = 1 " +
+            "and (r.type_shared = 'Participant' or r.type_shared = ?2)", nativeQuery = true)
+    List<FrequentRoute> getFrequentRoutePassengerAndDiver (String account_id,String type_shared);
 }

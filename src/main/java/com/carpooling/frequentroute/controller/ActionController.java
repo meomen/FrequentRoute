@@ -2,7 +2,11 @@ package com.carpooling.frequentroute.controller;
 
 import com.carpooling.frequentroute.entity.*;
 import com.carpooling.frequentroute.gripmap.MapUtility;
+import com.carpooling.frequentroute.model.Request;
+import com.carpooling.frequentroute.model.User;
 import com.carpooling.frequentroute.repository.*;
+import com.carpooling.frequentroute.repositoryFirebase.RequestRepository;
+import com.carpooling.frequentroute.repositoryFirebase.UserRepository;
 import com.github.chen0040.fpm.data.ItemSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -39,6 +43,12 @@ public class ActionController {
 
     @Autowired
     private FrequentPointRepostory frequentPointRepostory;
+
+    @Autowired
+    private RequestRepository requestRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
 
     @GetMapping("/createGridTrip")
@@ -134,5 +144,17 @@ public class ActionController {
         long endingTime = System.currentTimeMillis();
         String resultTime = "Running time: " + (endingTime - startingTime)/1000.0 +"s";
         return resultTime;
+    }
+
+    @GetMapping("/test")
+    @ResponseBody
+    public Request getResquest(@RequestParam("id") String id) {
+        return requestRepository.get(id,new Object());
+    }
+
+    @GetMapping("/user")
+    @ResponseBody
+    public User getUser(@RequestParam("id") String id) {
+        return userRepository.get(id,new Object());
     }
 }

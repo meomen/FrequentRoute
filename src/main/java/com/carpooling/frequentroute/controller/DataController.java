@@ -1,10 +1,18 @@
 package com.carpooling.frequentroute.controller;
 
 import com.carpooling.frequentroute.entity.*;
+import com.carpooling.frequentroute.gripmap.MapUtility;
+import com.carpooling.frequentroute.model.Offer;
+import com.carpooling.frequentroute.model.Request;
+import com.carpooling.frequentroute.model.User;
 import com.carpooling.frequentroute.repository.*;
+import com.carpooling.frequentroute.repositoryFirebase.OfferRepository;
+import com.carpooling.frequentroute.repositoryFirebase.RequestRepository;
+import com.carpooling.frequentroute.repositoryFirebase.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,8 +38,21 @@ public class DataController {
     private FrequentRouteRepostory frequentRouteRepostory;
 
     @Autowired
+    private FrequentPointRepostory frequentPointRepostory;
+
+    @Autowired
     private RouteRepository routeRepository;
 
+
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private RequestRepository requestRepository;
+    @Autowired
+    private OfferRepository offerRepository;
+
+    private List<Route> driverRoute = new ArrayList<>();
+    private List<Route> passengerRoute = new ArrayList<>();
 
     @GetMapping("/account")
     @ResponseBody
@@ -200,7 +221,7 @@ public class DataController {
 
     @GetMapping("/route/frequent_route_id")
     @ResponseBody
-    public List<Route> getRouteByFrequentRoute(@RequestParam UUID frequent_route_id) {
+    public Route getRouteByFrequentRoute(@RequestParam UUID frequent_route_id) {
         return routeRepository.findAllByFrequent_route_id(frequent_route_id);
     }
 
@@ -212,8 +233,136 @@ public class DataController {
     }
 
     @PutMapping("/route/is_shared")
-    public void updateIsShared(@RequestParam int is_shared, @RequestParam String type_shared, @RequestParam int id) {
+    public void updateIsShared(@RequestParam int is_shared, @RequestParam String type_shared, @RequestParam int id, @RequestParam String account_id) {
         routeRepository.updateIsSharedAndTypeShare(is_shared, type_shared, id);
+        if (is_shared == 1) {
+            User user = userRepository.get(account_id,new Object());
+            Route currentRoute = routeRepository.findById(id).get();
+            List<FrequentRoute> listFR = new ArrayList<>();
+
+            if (type_shared.equals("Participant")) {
+                listFR = frequentRouteRepostory.getFrequentRouteParticipant(account_id);
+            } else {
+                listFR = frequentRouteRepostory.getFrequentRoutePassengerAndDiver(account_id, type_shared);
+            }
+
+            if (!listFR.isEmpty()) {
+                matchingRoute(currentRoute.getFrequent_route_id(), listFR, type_shared);
+            }
+
+            boolean flag_continue = true;
+            if(!driverRoute.isEmpty()) {
+                List<Offer> offers = offerRepository.findAll(new Object());
+                for(Route route : driverRoute) {
+                    Offer offerAvailable = MapUtility.checkAvailableSeatOffer(offers,route.getAccount_id(),route.getAddress_start(),route.getAddress_end());
+                    if(offerAvailable != null) {
+                        createRequest(user, offerAvailable, currentRoute);
+                        flag_continue = false;
+                        break;
+                    }
+                }
+            }
+            if(!passengerRoute.isEmpty() && flag_continue){
+                Offer offer = createOffer(user,currentRoute);
+                for (Route route : passengerRoute) {
+                    User anotherUser = userRepository.get(route.getAccount_id(),new Object());
+                    createRequest(anotherUser,offer,route);
+                    routeRepository.updateIsShared(2,route.getId());
+                }
+            }
+        }
+    }
+
+    private void matchingRoute(UUID currentFrId, List<FrequentRoute> listFR, String type_shared) {
+
+        List<FrequentPoint> currentPoint = frequentPointRepostory.findAllByFrequentRoute(currentFrId);
+
+        for (FrequentRoute fr : listFR) {
+
+            List<FrequentPoint> anotherPoint = frequentPointRepostory.findAllByFrequentRoute(fr.getId());
+            List<String> currentString = new ArrayList<>();
+            List<String> anotherString = new ArrayList<>();
+            MapUtility.covertFrequentPointToString(currentPoint,currentString);
+            MapUtility.covertFrequentPointToString(anotherPoint,anotherString);
+
+            if (type_shared.equals("Passenger")) {
+                if (anotherString.containsAll(currentString)) {
+                    Route route = routeRepository.findAllByFrequent_route_id(fr.getId());
+                    driverRoute.add(route);
+                }
+            }
+            else if(type_shared.equals("Diver")) {
+                if (currentString.containsAll(anotherString)) {
+                    Route route = routeRepository.findAllByFrequent_route_id(fr.getId());
+                    passengerRoute.add(route);
+                }
+            }
+            else {
+                if (currentString.containsAll(anotherString)) {
+                    Route route = routeRepository.findAllByFrequent_route_id(fr.getId());
+                    passengerRoute.add(route);
+                }
+                else {
+                    if (anotherString.containsAll(currentString)) {
+                        Route route = routeRepository.findAllByFrequent_route_id(fr.getId());
+                        driverRoute.add(route);
+                    }
+                }
+            }
+        }
+    }
+
+    public void createRequest(User user,Offer offer,Route route) {
+        Request request = new Request();
+        request.setUser_id(offer.getUser_id());
+        request.setAccepted(true);
+        request.setUsername(user.getUsername());
+        request.setDateOfJourney(offer.getDateOfJourney());
+        request.setPickupTime(route.getTime_start());
+        request.setPickupLocation(route.getAddress_start());
+        request.setSeats(1);
+        request.setDestination(route.getAddress_end());
+        request.setLocation(route.getAddress_start());
+        request.setLuggage(1);
+        request.setRide_id(offer.getRideID());
+        request.setLicencePlate(offer.getLicencePlate());
+        request.setProfile_photo(user.getProfile_photo());
+
+        double cost = route.getLength_route() * MapUtility.COST_OF_KM;
+        request.setCost((float)cost);
+
+        request.setId(offer.getRideID()+"/"+user.getUser_id());
+        requestRepository.set(request,new Object());
+        offer.setId(offer.getRideID());
+        offer.setSeatsAvailable(offer.getSeatsAvailable()-1);
+        offerRepository.update(offer, new Object());
+    }
+
+    public Offer createOffer(User user, Route route) {
+        Offer offer = new Offer();
+        offer.setRideID(UUID.randomUUID().toString());
+        offer.setUser_id(user.getUser_id());
+        offer.setUsername(user.getUsername());
+        offer.setCurrentLocation(route.getAddress_start());
+        offer.setDestination(route.getAddress_end());
+        offer.setDateOfJourney("Every day");
+        offer.setSeatsAvailable(user.getSeats());
+        offer.setLicencePlate(user.getRegistration_plate());
+        offer.setLuggageAllowance(10);
+        offer.setCar(user.getCar());
+        offer.setProfile_picture(user.getProfile_photo());
+        offer.setCompleteRides(0);
+        offer.setUserRating(user.getUserRating());
+        offer.setDuration("30 mins");
+        offer.setExtraTime(5);
+        offer.setSameGender(false);
+
+        double cost = route.getLength_route() * MapUtility.COST_OF_KM;
+        offer.setCost((int) cost);
+
+        offer.setId(offer.getRideID());
+
+        return offerRepository.set(offer,new Object());
     }
 
 }

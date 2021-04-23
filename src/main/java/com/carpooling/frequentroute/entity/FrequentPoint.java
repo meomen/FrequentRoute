@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Data
-@Table (name = "frequent_point")
+@Table(name = "frequent_point")
 public class FrequentPoint {
 
     @Id
@@ -24,4 +24,9 @@ public class FrequentPoint {
     private int lng;
 
     private int time;
+
+    @Override
+    public String toString() {
+        return "(" + lat + ":" + lng + ":" + time + ")";
+    }
 }

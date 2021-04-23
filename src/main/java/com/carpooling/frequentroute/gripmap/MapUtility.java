@@ -2,8 +2,10 @@ package com.carpooling.frequentroute.gripmap;
 
 import com.carpooling.frequentroute.entity.FrequentPoint;
 import com.carpooling.frequentroute.entity.GridPoint;
+import com.carpooling.frequentroute.entity.Route;
 import com.carpooling.frequentroute.entity.Waypoint;
 import com.carpooling.frequentroute.model.LatLng;
+import com.carpooling.frequentroute.model.Offer;
 import com.github.chen0040.fpm.AssocRuleMiner;
 import com.github.chen0040.fpm.data.ItemSet;
 import com.github.chen0040.fpm.data.ItemSets;
@@ -16,6 +18,9 @@ import java.util.List;
 import java.util.UUID;
 
 public class MapUtility {
+
+    public static final double COST_OF_KM = 7000;
+
     public static double START_LATITUDE = 20.95;
     public static double START_LONGITUDE = 105.765;
     public static double END_LATITUDE = 21.085;
@@ -166,5 +171,24 @@ public class MapUtility {
         }
 
         return frequentPoint;
+    }
+
+    public static void covertFrequentPointToString(List<FrequentPoint> listPoint, List<String>listString) {
+        for (FrequentPoint point : listPoint) {
+            listString.add(point.toString());
+        }
+    }
+
+    public static Offer checkAvailableSeatOffer(List<Offer> offers, String account_id, String origin, String destination) {
+        for (Offer offer : offers) {
+            if(offer.getUser_id().equals(account_id)
+            && offer.getCurrentLocation().equals(origin)
+            && offer.getDestination().equals(destination)) {
+                if(offer.getSeatsAvailable() - 1 > 0) {
+                    return offer;
+                }
+            }
+        }
+        return null;
     }
 }
