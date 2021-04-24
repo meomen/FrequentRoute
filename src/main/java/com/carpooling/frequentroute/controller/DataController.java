@@ -372,6 +372,7 @@ public class DataController {
         offer.setLicencePlate(user.getRegistration_plate());
         offer.setLuggageAllowance(10);
         offer.setCar(user.getCar());
+        offer.setPickupTime(route.getTime_start());
         offer.setProfile_picture(user.getProfile_photo());
         offer.setCompleteRides(0);
         offer.setUserRating(user.getUserRating());
