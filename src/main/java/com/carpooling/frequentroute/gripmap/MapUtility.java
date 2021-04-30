@@ -89,6 +89,7 @@ public class MapUtility {
         return builder.toString();
     }
 
+    // Dán nhán dữ liệu
     public static List<GridPoint> tranformTriptoGrid(List<Waypoint> waypoints, UUID grid_trip_id) {
         ArrayList arrayGridPoint = new ArrayList();
         int preIndexLat = -1;
@@ -159,18 +160,21 @@ public class MapUtility {
     }
 
     public static FrequentPoint createFrequentPoint (String stringFP, UUID frequent_route_id){
+
+        //Lấy dữ liệu từng điểm tọa độ
         FrequentPoint frequentPoint = new FrequentPoint();
         frequentPoint.setFrequent_route_id(frequent_route_id);
 
+        // Tính toán tọa tương với ô trong bản đồ lưới
         if(!stringFP.isEmpty()) {
             stringFP = stringFP.substring(1,stringFP.length()-1);
-            String[] arrString = stringFP.split(":");
-            frequentPoint.setLat(Integer.parseInt(arrString[0]));
-            frequentPoint.setLng(Integer.parseInt(arrString[1]));
-            frequentPoint.setTime(Integer.parseInt(arrString[2]));
+            String[] arrString = stringFP.split(":");          // Tách từng phần tử trong (x:y:y)
+            frequentPoint.setLat(Integer.parseInt(arrString[0]));   // Quy đổi x -> X
+            frequentPoint.setLng(Integer.parseInt(arrString[1]));   // Quy đổi y -> Y
+            frequentPoint.setTime(Integer.parseInt(arrString[2]));  // Quy đổi t -> T
         }
 
-        return frequentPoint;
+        return frequentPoint;           // trả về nhãn dạng (X:Y:T)
     }
 
     public static void covertFrequentPointToString(List<FrequentPoint> listPoint, List<String>listString) {
