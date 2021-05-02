@@ -2,6 +2,7 @@ package com.carpooling.frequentroute.repository;
 
 import com.carpooling.frequentroute.entity.FrequentRoute;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +15,7 @@ public interface FrequentRouteRepostory extends JpaRepository<FrequentRoute, UUI
     @Query(value = "select * from frequent_route where account_id = ?1", nativeQuery = true)
     List<FrequentRoute> findAllByAccount_id(String account_id);
 
+    @Modifying
     @Query(value = "delete from frequent_route where account_id = ?1", nativeQuery = true)
     void deleteAllByAccount_id(String account_id);
 

@@ -2,22 +2,23 @@ package com.carpooling.frequentroute.controller;
 
 import com.carpooling.frequentroute.entity.*;
 import com.carpooling.frequentroute.gripmap.MapUtility;
-import com.carpooling.frequentroute.model.Request;
-import com.carpooling.frequentroute.model.User;
+import com.carpooling.frequentroute.model.ResultFR;
 import com.carpooling.frequentroute.repository.*;
 import com.carpooling.frequentroute.repositoryFirebase.RequestRepository;
 import com.carpooling.frequentroute.repositoryFirebase.UserRepository;
 import com.github.chen0040.fpm.data.ItemSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Controller
 public class ActionController {
@@ -49,6 +50,11 @@ public class ActionController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @ModelAttribute
+    public void setResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
 
 
     @GetMapping("/createGridTrip")
@@ -82,21 +88,27 @@ public class ActionController {
         }
 
         long endingTime = System.currentTimeMillis();
-        String resultTime = "Running time: " + (endingTime - startingTime)/1000.0+"s";
+        String resultTime = "Running time: " + (endingTime - startingTime) / 1000.0 + "s";
         return resultTime;
 
     }
 
+    @Transactional
     @GetMapping("/findFrequentRoute")
     @ResponseBody
-    public String findFrequentRoute(@RequestParam("account_id") String account_id,
-                                  @RequestParam("min_support") int min_support,
-                                  @RequestParam("min_length") int min_length) {
+    public ResultFR findFrequentRoute(@RequestParam("account_id") String account_id,
+                                      @RequestParam("min_support") float min_support,
+                                      @RequestParam("min_length") int min_length) {
+        ResultFR result = new ResultFR();
+        result.setRuntime("");
+        result.setData("");
         long startingTime = System.currentTimeMillis();
 
         List<FrequentRoute> routeList = frequentRouteRepostory.findAllByAccount_id(account_id);
         // Delete Route
-        if (!routeList.isEmpty()) frequentRouteRepostory.deleteAllByAccount_id(account_id);
+        if (!routeList.isEmpty()) {
+            frequentRouteRepostory.deleteAllByAccount_id(account_id);
+        }
         for (FrequentRoute route : routeList) {
             frequentPointRepostory.deleteAllByFrequentRoute(route.getId());
         }
@@ -104,20 +116,26 @@ public class ActionController {
         // DataMining
         List<List<GridPoint>> gridmap = new ArrayList<>();
         List<GridTrip> gridTripList = gridTripRepostory.findAllByAccount_id(account_id);
-        if (gridTripList == null || gridTripList.isEmpty()) return "fail";
+        if (gridTripList == null || gridTripList.isEmpty()) {
+            result.setData("fail");
+            result.setRuntime("fail");
+            return result;
+        }
         for (GridTrip gridTrip : gridTripList) {
             List<GridPoint> gridPointList = gridPointRepostory.findAllByGrid_trip_id(gridTrip.getId());
             if (gridPointList == null || gridPointList.isEmpty()) continue;
             gridmap.add(gridPointList);
         }
-        List<ItemSet> itemSets = MapUtility.findFrequentRoute(gridmap, min_support, min_length);
-
+        int support = (int) (min_support * (float) gridTripList.size());
+        List<ItemSet> itemSets = MapUtility.findFrequentRoute(gridmap, support, min_length);
+        int index = 0;
         for (ItemSet itemSet : itemSets) {
+            index++;
             itemSet.getItems().sort(new Comparator<String>() {
                 @Override
                 public int compare(String o1, String o2) {
-                    String a = o1.substring(1,o1.length()-1);
-                    String b = o2.substring(1,o2.length()-1);
+                    String a = o1.substring(1, o1.length() - 1);
+                    String b = o2.substring(1, o2.length() - 1);
                     String[] arrString = a.split(":");
                     a = arrString[2];
                     arrString = b.split(":");
@@ -125,9 +143,10 @@ public class ActionController {
                     return a.compareTo(b);
                 }
             });
-            System.out.println("itemset:"+ itemSet);
+            String data = "Route" + index + ": " + itemSet + " \n";
+            result.setData(result.getData() + data);
         }
-
+        long endingTime = System.currentTimeMillis();
         //Save
         for (ItemSet itemSet : itemSets) {
 
@@ -136,25 +155,77 @@ public class ActionController {
             frequentRouteRepostory.save(frequentRoute);
 
             for (String s : itemSet.getItems()) {
-                FrequentPoint frequentPoint = MapUtility.createFrequentPoint(s,frequentRoute.getId());
+                FrequentPoint frequentPoint = MapUtility.createFrequentPoint(s, frequentRoute.getId());
                 frequentPointRepostory.save(frequentPoint);
             }
         }
 
-        long endingTime = System.currentTimeMillis();
-        String resultTime = "Running time: " + (endingTime - startingTime)/1000.0 +"s";
-        return resultTime;
+        String resultTime = (endingTime - startingTime) / 1000.0 + " (s)";
+        result.setRuntime(resultTime);
+        return result;
     }
 
-    @GetMapping("/test")
+
+    @GetMapping("/grid_map/trip/all")
     @ResponseBody
-    public Request getResquest(@RequestParam("id") String id) {
-        return requestRepository.get(id,new Object());
+    public List<List<Waypoint>> getAllTripOfAccount(@RequestParam String account_id) {
+        List<List<Waypoint>> result = new ArrayList<>();
+
+        List<Trip> tripList = tripRepostory.findAllByAccount_owner(account_id);
+        for (Trip trip : tripList) {
+            List<Waypoint> waypoints = waypointRepostory.findAllByOn_trip(trip.getTrip_id());
+            result.add(waypoints);
+        }
+        return result;
     }
 
-    @GetMapping("/user")
+    @GetMapping("/grid_map/trip/date")
     @ResponseBody
-    public User getUser(@RequestParam("id") String id) {
-        return userRepository.get(id,new Object());
+    public List<List<Waypoint>> getAllTripOfAccountAndDate(@RequestParam String account_id, @RequestParam String date) throws ParseException {
+        List<List<Waypoint>> result = new ArrayList<>();
+        Date date1 = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+        List<Trip> tripList = tripRepostory.findAllByAccount_ownerAndDate(account_id, date1);
+        for (Trip trip : tripList) {
+            List<Waypoint> waypoints = waypointRepostory.findAllByOn_trip(trip.getTrip_id());
+            result.add(waypoints);
+        }
+        return result;
+    }
+
+    @GetMapping("/grid_map/grid/all")
+    @ResponseBody
+    public List<List<GridPoint>> getAllGripOfAccount(@RequestParam String account_id) {
+        List<List<GridPoint>> result = new ArrayList<>();
+        List<GridTrip> gridTripList = gridTripRepostory.findAllByAccount_id(account_id);
+        for (GridTrip gridTrip : gridTripList) {
+            List<GridPoint> gridPoints = gridPointRepostory.findAllByGrid_trip_id(gridTrip.getId());
+            result.add(gridPoints);
+        }
+        return result;
+    }
+
+    @GetMapping("/grid_map/grid/date")
+    @ResponseBody
+    public List<List<GridPoint>> getAllGripOfAccountAndDate(@RequestParam String account_id, @RequestParam String date) throws ParseException {
+        List<List<GridPoint>> result = new ArrayList<>();
+        Date date1 = new SimpleDateFormat("yyyy-MM-dd").parse(date);
+        List<GridTrip> gridTripList = gridTripRepostory.findAllByAccount_idAnDate(account_id, date1);
+        for (GridTrip gridTrip : gridTripList) {
+            List<GridPoint> gridPoints = gridPointRepostory.findAllByGrid_trip_id(gridTrip.getId());
+            result.add(gridPoints);
+        }
+        return result;
+    }
+
+    @GetMapping("/grid_map/frequent_route")
+    @ResponseBody
+    public List<List<FrequentPoint>> getAllFrequent(@RequestParam String account_id) {
+        List<List<FrequentPoint>> result = new ArrayList<>();
+        List<FrequentRoute> frequentRoutes = frequentRouteRepostory.findAllByAccount_id(account_id);
+        for (FrequentRoute frequentRoute : frequentRoutes) {
+            List<FrequentPoint> frequentPoints = frequentPointRepostory.findAllByFrequentRoute(frequentRoute.getId());
+            result.add(frequentPoints);
+        }
+        return result;
     }
 }
