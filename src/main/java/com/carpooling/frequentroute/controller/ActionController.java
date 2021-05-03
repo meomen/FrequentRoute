@@ -96,9 +96,16 @@ public class ActionController {
     @Transactional
     @GetMapping("/findFrequentRoute")
     @ResponseBody
-    public ResultFR findFrequentRoute(@RequestParam("account_id") String account_id,
+    public ResultFR findFrequentRoute(
+                                      @RequestParam("type_search") String type_search,
+                                      @RequestParam("account_id") String account_id,
                                       @RequestParam("min_support") float min_support,
                                       @RequestParam("min_length") int min_length) {
+        if (type_search.equals("Name")) {
+            List<Account> accountList = accountRepository.getAccountByName(account_id);
+            if (accountList != null) account_id = accountList.get(0).getAccount_id();
+        }
+
         ResultFR result = new ResultFR();
         result.setRuntime("");
         result.setData("");
@@ -168,7 +175,11 @@ public class ActionController {
 
     @GetMapping("/grid_map/trip/all")
     @ResponseBody
-    public List<List<Waypoint>> getAllTripOfAccount(@RequestParam String account_id) {
+    public List<List<Waypoint>> getAllTripOfAccount(@RequestParam String type_search, @RequestParam String account_id) {
+        if (type_search.equals("Name")) {
+            List<Account> accountList = accountRepository.getAccountByName(account_id);
+            if (accountList != null) account_id = accountList.get(0).getAccount_id();
+        }
         List<List<Waypoint>> result = new ArrayList<>();
 
         List<Trip> tripList = tripRepostory.findAllByAccount_owner(account_id);
@@ -181,7 +192,11 @@ public class ActionController {
 
     @GetMapping("/grid_map/trip/date")
     @ResponseBody
-    public List<List<Waypoint>> getAllTripOfAccountAndDate(@RequestParam String account_id, @RequestParam String date) throws ParseException {
+    public List<List<Waypoint>> getAllTripOfAccountAndDate(@RequestParam String type_search, @RequestParam String account_id, @RequestParam String date) throws ParseException {
+        if (type_search.equals("Name")) {
+            List<Account> accountList = accountRepository.getAccountByName(account_id);
+            if (accountList != null) account_id = accountList.get(0).getAccount_id();
+        }
         List<List<Waypoint>> result = new ArrayList<>();
         Date date1 = new SimpleDateFormat("yyyy-MM-dd").parse(date);
         List<Trip> tripList = tripRepostory.findAllByAccount_ownerAndDate(account_id, date1);
@@ -194,7 +209,12 @@ public class ActionController {
 
     @GetMapping("/grid_map/grid/all")
     @ResponseBody
-    public List<List<GridPoint>> getAllGripOfAccount(@RequestParam String account_id) {
+    public List<List<GridPoint>> getAllGripOfAccount(@RequestParam String type_search, @RequestParam String account_id) {
+        if (type_search.equals("Name")) {
+            List<Account> accountList = accountRepository.getAccountByName(account_id);
+            if (accountList != null) account_id = accountList.get(0).getAccount_id();
+        }
+
         List<List<GridPoint>> result = new ArrayList<>();
         List<GridTrip> gridTripList = gridTripRepostory.findAllByAccount_id(account_id);
         for (GridTrip gridTrip : gridTripList) {
@@ -206,7 +226,11 @@ public class ActionController {
 
     @GetMapping("/grid_map/grid/date")
     @ResponseBody
-    public List<List<GridPoint>> getAllGripOfAccountAndDate(@RequestParam String account_id, @RequestParam String date) throws ParseException {
+    public List<List<GridPoint>> getAllGripOfAccountAndDate(@RequestParam String type_search, @RequestParam String account_id, @RequestParam String date) throws ParseException {
+        if (type_search.equals("Name")) {
+            List<Account> accountList = accountRepository.getAccountByName(account_id);
+            if (accountList != null) account_id = accountList.get(0).getAccount_id();
+        }
         List<List<GridPoint>> result = new ArrayList<>();
         Date date1 = new SimpleDateFormat("yyyy-MM-dd").parse(date);
         List<GridTrip> gridTripList = gridTripRepostory.findAllByAccount_idAnDate(account_id, date1);
@@ -219,7 +243,11 @@ public class ActionController {
 
     @GetMapping("/grid_map/frequent_route")
     @ResponseBody
-    public List<List<FrequentPoint>> getAllFrequent(@RequestParam String account_id) {
+    public List<List<FrequentPoint>> getAllFrequent(@RequestParam String type_search, @RequestParam String account_id) {
+        if (type_search.equals("Name")) {
+            List<Account> accountList = accountRepository.getAccountByName(account_id);
+            if (accountList != null) account_id = accountList.get(0).getAccount_id();
+        }
         List<List<FrequentPoint>> result = new ArrayList<>();
         List<FrequentRoute> frequentRoutes = frequentRouteRepostory.findAllByAccount_id(account_id);
         for (FrequentRoute frequentRoute : frequentRoutes) {
@@ -228,4 +256,5 @@ public class ActionController {
         }
         return result;
     }
+
 }
