@@ -11,6 +11,7 @@ import com.carpooling.frequentroute.repositoryFirebase.RequestRepository;
 import com.carpooling.frequentroute.repositoryFirebase.UserRepository;
 import com.github.fabiomaffioletti.firebase.repository.Filter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -233,6 +234,7 @@ public class DataController {
         return route;
     }
 
+    @Transactional
     @PutMapping("/route/is_shared")
     public void updateIsShared(@RequestParam int is_shared, @RequestParam String type_shared, @RequestParam int id, @RequestParam String account_id) {
         try {

@@ -2,7 +2,9 @@ package com.carpooling.frequentroute.controller;
 
 import com.carpooling.frequentroute.entity.*;
 import com.carpooling.frequentroute.gripmap.MapUtility;
+import com.carpooling.frequentroute.model.Request;
 import com.carpooling.frequentroute.model.ResultFR;
+import com.carpooling.frequentroute.model.User;
 import com.carpooling.frequentroute.repository.*;
 import com.carpooling.frequentroute.repositoryFirebase.RequestRepository;
 import com.carpooling.frequentroute.repositoryFirebase.UserRepository;
@@ -255,6 +257,18 @@ public class ActionController {
             result.add(frequentPoints);
         }
         return result;
+    }
+
+    @GetMapping("/test")
+    @ResponseBody
+    public Request getResquest(@RequestParam("id") String id) {
+        return requestRepository.get(id,new Object());
+    }
+
+    @GetMapping("/user")
+    @ResponseBody
+    public User getUser(@RequestParam("id") String id) {
+        return userRepository.get(id,new Object());
     }
 
 }
